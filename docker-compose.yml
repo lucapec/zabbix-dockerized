@@ -1,0 +1,48 @@
+version: '3.1'
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-6.4-latest
+    container_name: zabbix-server
+    ports:
+      - "10051:10051"
+    env_file:
+      - ./env_vars/.env_db_pgsql
+      - ./env_vars/.env_web
+      - ./env_vars/.env_srv
+    depends_on:
+      - postgres
+    networks:
+      - zabbix-net
+    restart: always
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-6.4-latest
+    container_name: zabbix-web
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./env_vars/.env_db_pgsql
+      - ./env_vars/.env_web
+    depends_on:
+      - zabbix-server
+    networks:
+      - zabbix-net
+    restart: always
+
+  postgres:
+    image: postgres:14-alpine
+    container_name: zabbix-postgres
+    env_file:
+      - ./env_vars/.env_db_pgsql
+      - ./env_vars/.env_web
+      - ./env_vars/.env_web_service
+    volumes:
+      - /var/lib/postgresql/data
+    networks:
+      - zabbix-net
+    restart: always
+    
+  
+networks:
+  zabbix-net:
+    driver: bridge
